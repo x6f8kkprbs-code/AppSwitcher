@@ -1,17 +1,15 @@
-//
-//  AppSwitcherApp.swift
-//  AppSwitcher
-//
-//  Created by Raul Geisler on 21.03.26.
-//
-
 import SwiftUI
+import AppKit
 
 @main
 struct AppSwitcherApp: App {
+    // AppDelegate verwaltet das floating Panel und den globalen Hotkey
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        // Wir brauchen keine standard WindowGroup — das Panel wird manuell verwaltet
+        Settings {
+            EmptyView()
         }
     }
 }
