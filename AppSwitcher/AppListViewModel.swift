@@ -95,32 +95,29 @@ class AppListViewModel: ObservableObject {
     func activate(_ app: RunningApp) {
         guard let nsApp = NSRunningApplication(processIdentifier: app.id) else { return }
 
-        // Schritt 1: App unhiden falls sie per Cmd+H oder hide() versteckt wurde
-        // isHidden = true bedeutet die App laeuft aber alle Fenster sind unsichtbar
-        if nsApp.isHidden {
-            nsApp.unhide()
-        }
+        // Schritt 1: App unhiden falls per Cmd+H versteckt
+        if nsApp.isHidden { nsApp.unhide() }
 
-        // Schritt 2: Minimierte Fenster via Accessibility API wiederherstellen
-        // AXMinimized = true bedeutet das Fenster ist im Dock verschwunden
+        // Schritt 2: Minimierte Fenster via AX-API aufklappen
+        // Wir sprechen den Prozess direkt per PID an - das ist zuverlaessiger
+        // als per App-Name (vermeidet Probleme mit Sonderzeichen im Namen)
         let appElement = AXUIElementCreateApplication(app.id)
         var windowList: CFTypeRef?
         if AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowList) == .success,
            let windows = windowList as? [AXUIElement] {
             for window in windows {
                 var minimized: CFTypeRef?
-                // Jeden minimierten Fenster aufklappen
                 if AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minimized) == .success,
-                   let isMinimized = minimized as? Bool, isMinimized {
-                    // kAXMinimizedAttribute auf false setzen klappt das Fenster auf
-                    AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, false as CFTypeRef)
+                   let isMin = minimized as? Bool, isMin {
+                    // kCFBooleanFalse ist der korrekte Typ - nicht einfach false
+                    AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
                 }
             }
         }
 
-        // Schritt 3: App in den Vordergrund bringen (alle Fenster)
-        // Kurze Verzoegerung damit unhide/unminimize abgeschlossen ist
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        // Schritt 3: App in den Vordergrund bringen
+        // 150ms Delay damit die Unminimize-Animation abgeschlossen ist
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             nsApp.activate(options: [.activateAllWindows])
         }
     }
