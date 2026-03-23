@@ -41,7 +41,7 @@ struct ContentView: View {
             Spacer()
                 .frame(width: 30)
             
-            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.1")
+            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.2")
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85))
                 .animation(.easeInOut(duration: 0.2), value: viewModel.isEditMode)

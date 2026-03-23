@@ -98,9 +98,9 @@ class AppListViewModel: ObservableObject {
         // Schritt 1: App unhiden falls per Cmd+H versteckt
         if nsApp.isHidden { nsApp.unhide() }
 
-        // Schritt 2: Minimierte Fenster via AX-API aufklappen
-        // Wir sprechen den Prozess direkt per PID an - das ist zuverlaessiger
-        // als per App-Name (vermeidet Probleme mit Sonderzeichen im Namen)
+        // Schritt 2: Alle Fenster via AX aufklappen
+        // kCFBooleanFalse (nicht false as CFTypeRef!) ist der korrekte Typ
+        // den die Accessibility API akzeptiert um Fenster zu unminimieren
         let appElement = AXUIElementCreateApplication(app.id)
         var windowList: CFTypeRef?
         if AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowList) == .success,
@@ -109,17 +109,13 @@ class AppListViewModel: ObservableObject {
                 var minimized: CFTypeRef?
                 if AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minimized) == .success,
                    let isMin = minimized as? Bool, isMin {
-                    // kCFBooleanFalse ist der korrekte Typ - nicht einfach false
                     AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
                 }
             }
         }
 
-        // Schritt 3: App in den Vordergrund bringen
-        // 150ms Delay damit die Unminimize-Animation abgeschlossen ist
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            nsApp.activate(options: [.activateAllWindows])
-        }
+        // Schritt 3: App sofort aktivieren
+        nsApp.activate(options: [.activateAllWindows])
     }
 
     func togglePin(_ app: RunningApp) {
