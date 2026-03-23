@@ -10,6 +10,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             DarkGlassBackground()
+            
             VStack(spacing: 0) {
                 header
                 Divider().background(Color.white.opacity(0.08))
@@ -17,25 +18,47 @@ struct ContentView: View {
                 Divider().background(Color.white.opacity(0.08))
                 footer
             }
+            
+            // Pfeil-Buttons in allen vier Ecken
+            cornerButtons
         }
         .clipShape(RoundedRectangle(cornerRadius: 20))
+        .contextMenu {
+            Button(role: .destructive, action: { NSApp.terminate(nil) }) {
+                Label("AppSwitcher beenden", systemImage: "power")
+            }
+        }
+        .background(
+            Button("") { NSApp.terminate(nil) }
+                .keyboardShortcut("q", modifiers: .command)
+                .opacity(0)
+        )
     }
 
     private var header: some View {
         HStack(spacing: 10) {
-            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.0")
+            // Platz für den linken oberen Pfeil-Button
+            Spacer()
+                .frame(width: 30)
+            
+            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.1")
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85))
                 .animation(.easeInOut(duration: 0.2), value: viewModel.isEditMode)
+            
             Spacer()
+            
             if !viewModel.isEditMode {
-                Button(action: { viewModel.loadApps() }) {
+                Button(action: { 
+                    Task { await viewModel.loadApps() }
+                }) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.white.opacity(0.3))
                 }
                 .buttonStyle(.plain)
             }
+            
             Button(action: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                     viewModel.isEditMode.toggle()
@@ -49,6 +72,10 @@ struct ContentView: View {
                     .background(Capsule().fill(viewModel.isEditMode ? Color.white.opacity(0.18) : Color.white.opacity(0.07)))
             }
             .buttonStyle(.plain)
+            
+            // Platz für den rechten oberen Pfeil-Button
+            Spacer()
+                .frame(width: 30)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 9)
@@ -100,21 +127,138 @@ struct ContentView: View {
 
     private var footer: some View {
         HStack {
+            // Platz für den linken unteren Pfeil-Button
+            Spacer()
+                .frame(width: 30)
+            
             Text(viewModel.isEditMode
                  ? "\(viewModel.pinnedBundleIDs.count) selected"
                  : "\(viewModel.visibleApps.count) apps")
                 .font(.system(size: 9, design: .rounded))
                 .foregroundStyle(.white.opacity(0.6))
+            
             Spacer()
-            Text("Cmd+Shift+Space")
+            
+            Text("Ctrl+F1")
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(.white.opacity(0.55))
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)
                 .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.06)))
+            
+            // Platz für den rechten unteren Pfeil-Button
+            Spacer()
+                .frame(width: 30)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
+    }
+    
+    // Pfeil-Buttons in allen 4 Ecken zum Verschieben des Panels
+    private var cornerButtons: some View {
+        GeometryReader { geometry in
+            Group {
+                // Oben Links
+                CornerButton(icon: "arrow.up.left", corner: .topLeft)
+                    .position(x: 16, y: 16)
+                
+                // Oben Rechts
+                CornerButton(icon: "arrow.up.right", corner: .topRight)
+                    .position(x: geometry.size.width - 16, y: 16)
+                
+                // Unten Links
+                CornerButton(icon: "arrow.down.left", corner: .bottomLeft)
+                    .position(x: 16, y: geometry.size.height - 16)
+                
+                // Unten Rechts
+                CornerButton(icon: "arrow.down.right", corner: .bottomRight)
+                    .position(x: geometry.size.width - 16, y: geometry.size.height - 16)
+            }
+        }
+    }
+}
+
+// Enum für Bildschirm-Ecken
+enum ScreenCorner {
+    case topLeft, topRight, bottomLeft, bottomRight
+}
+
+// Pfeil-Button Komponente
+struct CornerButton: View {
+    let icon: String
+    let corner: ScreenCorner
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: { movePanel(to: corner) }) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.white.opacity(isHovered ? 0.9 : 0.4))
+                .frame(width: 22, height: 22)
+                .background(
+                    Circle()
+                        .fill(isHovered ? Color.white.opacity(0.15) : Color.white.opacity(0.05))
+                )
+                .scaleEffect(isHovered ? 1.15 : 1.0)
+                .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isHovered)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .help(helpText)
+    }
+    
+    private var helpText: String {
+        switch corner {
+        case .topLeft: return "Nach oben links verschieben"
+        case .topRight: return "Nach oben rechts verschieben"
+        case .bottomLeft: return "Nach unten links verschieben"
+        case .bottomRight: return "Nach unten rechts verschieben"
+        }
+    }
+    
+    // Panel zur gewählten Ecke verschieben
+    private func movePanel(to corner: ScreenCorner) {
+        // Suche nach dem Panel
+        guard let panel = NSApp.windows.first(where: { 
+            $0 is FloatingPanel || ($0.styleMask.contains(.borderless) && $0.level == .floating)
+        }) else {
+            return
+        }
+        
+        // Verwende den Screen, auf dem das Panel aktuell ist (oder main)
+        guard let screen = panel.screen ?? NSScreen.main else {
+            return
+        }
+        
+        // visibleFrame berücksichtigt Menüleiste und Dock
+        let screenFrame = screen.visibleFrame
+        let panelFrame = panel.frame
+        let padding: CGFloat = 20
+        
+        var newFrame = panelFrame
+        
+        switch corner {
+        case .topLeft:
+            newFrame.origin.x = screenFrame.minX + padding
+            newFrame.origin.y = screenFrame.maxY - panelFrame.height - padding
+            
+        case .topRight:
+            newFrame.origin.x = screenFrame.maxX - panelFrame.width - padding
+            newFrame.origin.y = screenFrame.maxY - panelFrame.height - padding
+            
+        case .bottomLeft:
+            newFrame.origin.x = screenFrame.minX + padding
+            newFrame.origin.y = screenFrame.minY + padding
+            
+        case .bottomRight:
+            newFrame.origin.x = screenFrame.maxX - panelFrame.width - padding
+            newFrame.origin.y = screenFrame.minY + padding
+        }
+        
+        // Setze die neue Position animiert
+        panel.setFrame(newFrame, display: true, animate: true)
     }
 }
 

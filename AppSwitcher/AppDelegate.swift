@@ -54,7 +54,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         InstallEventHandler(GetApplicationEventTarget(), hotkeyHandler, 1, &eventSpec, nil, nil)
         RegisterEventHotKey(
-            UInt32(kVK_Space), UInt32(cmdKey | shiftKey),
+            UInt32(122), UInt32(controlKey),
             gMyHotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef
         )
     }
