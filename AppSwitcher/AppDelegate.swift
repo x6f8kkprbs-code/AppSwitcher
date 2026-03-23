@@ -11,6 +11,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupFloatingPanel()
         registerGlobalHotkey()
         showPanel()
+        checkAccessibilityPermission()
+    }
+
+    func checkAccessibilityPermission() {
+        guard !AXIsProcessTrusted() else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            let alert = NSAlert()
+            alert.messageText = "Bedienungshilfen fehlen"
+            alert.informativeText = "Systemeinstellungen > Datenschutz > Bedienungshilfen: AppSwitcher entfernen, neu hinzufuegen und Schalter aktivieren. Dann App neu starten."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Systemeinstellungen oeffnen")
+            alert.addButton(withTitle: "Spaeter")
+            if alert.runModal() == .alertFirstButtonReturn {
+                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+            }
+        }
     }
 
     func setupFloatingPanel() {
