@@ -146,20 +146,20 @@ class AppListViewModel: ObservableObject {
             guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
+        // Schritt 2: System Events setzt visible=false fuer alle Prozesse
         let hideAll = "tell application \"System Events\" to set visible of every process whose background only is false and name is not \"AppSwitcher\" to false"
         let closeFinder = "tell application \"Finder\" to close every window"
-        let hideClaude = "tell application \"System Events\" to set visible of process \"Claude\" to false"
         DispatchQueue.global(qos: .userInitiated).async {
-            // Cold-Start Fix: Claude sofort als erstes verstecken
-            // beim ersten Clear ist Claude noch nicht im hide-Zustand registriert
-            NSAppleScript(source: hideClaude)?.executeAndReturnError(nil)
+            // Erster Pass: sofort
             NSAppleScript(source: hideAll)?.executeAndReturnError(nil)
             NSAppleScript(source: closeFinder)?.executeAndReturnError(nil)
-            Thread.sleep(forTimeInterval: 0.3)
-            NSAppleScript(source: hideClaude)?.executeAndReturnError(nil)
+            // Zweiter Pass: nach 0.4s - erfasst Apps die beim ersten Pass noch nicht bereit waren
+            Thread.sleep(forTimeInterval: 0.4)
+            NSAppleScript(source: hideAll)?.executeAndReturnError(nil)
             NSAppleScript(source: closeFinder)?.executeAndReturnError(nil)
-            Thread.sleep(forTimeInterval: 0.5)
-            NSAppleScript(source: hideClaude)?.executeAndReturnError(nil)
+            // Dritter Pass: nach weiteren 0.6s - fuer besonders langsame Apps
+            Thread.sleep(forTimeInterval: 0.6)
+            NSAppleScript(source: hideAll)?.executeAndReturnError(nil)
         }
         windowsCleared = true
     }
