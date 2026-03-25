@@ -150,6 +150,26 @@ class AppListViewModel: ObservableObject {
                || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
+        // Alle Fenster aller Apps minimieren via AppleScript
+        // Funktioniert auf Single- und Multi-Screen gleichermassen
+        // AXMinimized = true schickt jedes Fenster ins Dock
+        let minimizeScript = """
+        tell application "System Events"
+            repeat with proc in every process whose background only is false
+                try
+                    repeat with win in every window of proc
+                        try
+                            set value of attribute "AXMinimized" of win to true
+                        end try
+                    end repeat
+                end try
+            end repeat
+        end tell
+        """
+        DispatchQueue.global(qos: .userInitiated).async {
+            NSAppleScript(source: minimizeScript)?.executeAndReturnError(nil)
+        }
+
         // Finder sofort per AppleScript schliessen (reagiert besser als hide)
         NSAppleScript(source: "tell application \"Finder\" to close every window")?.executeAndReturnError(nil)
         // Zweiter hide-Pass nach 0.5s - aber NUR fuer Apps die noch sichtbar sind
