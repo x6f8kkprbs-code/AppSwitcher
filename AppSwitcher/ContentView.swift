@@ -144,8 +144,10 @@ struct ContentView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 8) {
-            // XOR/Latch Toggle - mit mehr Abstand vom Rand
+        HStack(spacing: 6) {
+            // Latch/XOR Toggle
+            // Latch (blau): alle Fenster bleiben offen, App kommt nach vorne
+            // XOR (gelb): nur gewaehlte App sichtbar, alle anderen versteckt
             Button(action: {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
                     viewModel.windowMode = viewModel.windowMode == .xor ? .latch : .xor
@@ -153,15 +155,15 @@ struct ContentView: View {
             }) {
                 Text(viewModel.windowMode == .xor ? "XOR" : "Latch")
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .foregroundStyle(viewModel.windowMode == .xor ? Color.orange : Color.white.opacity(0.5))
-                    .padding(.horizontal, 6)
+                    .foregroundStyle(viewModel.windowMode == .xor ? Color.yellow : Color.cyan)
+                    .padding(.horizontal, 7)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(viewModel.windowMode == .xor ? Color.orange.opacity(0.2) : Color.white.opacity(0.07)))
+                    .background(Capsule().fill(viewModel.windowMode == .xor ? Color.yellow.opacity(0.18) : Color.cyan.opacity(0.18)))
             }
             .buttonStyle(.plain)
-            // Clear / All Toggle
-            // Clear: alle Fenster verstecken
-            // All: alle versteckten Fenster wieder anzeigen
+            // Clear/All Toggle
+            // Clear (rot): alle Fenster verstecken
+            // All (gruen): alle versteckten Fenster wieder anzeigen
             Button(action: {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
                     viewModel.toggleClearAll()
@@ -169,10 +171,10 @@ struct ContentView: View {
             }) {
                 Text(viewModel.windowsCleared ? "All" : "Clear")
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .foregroundStyle(viewModel.windowsCleared ? Color.blue : Color.white.opacity(0.5))
-                    .padding(.horizontal, 6)
+                    .foregroundStyle(viewModel.windowsCleared ? Color.green : Color.red.opacity(0.8))
+                    .padding(.horizontal, 7)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(viewModel.windowsCleared ? Color.blue.opacity(0.2) : Color.white.opacity(0.07)))
+                    .background(Capsule().fill(viewModel.windowsCleared ? Color.green.opacity(0.18) : Color.red.opacity(0.12)))
             }
             .buttonStyle(.plain)
             Spacer()
@@ -187,7 +189,8 @@ struct ContentView: View {
                 .padding(.vertical, 2)
                 .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.06)))
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, 14)
+        .padding(.trailing, 12)
         .padding(.vertical, 7)
     }
     

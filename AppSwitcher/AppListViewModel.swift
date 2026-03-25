@@ -139,11 +139,15 @@ class AppListViewModel: ObservableObject {
     @Published var windowsCleared: Bool = false
 
     func clearAllWindows() {
-        // Alle regulaeren Apps verstecken (auf allen Spaces/Screens)
-        // hide() ist systemweit - betrifft alle Spaces gleichzeitig
+        // Alle regulaeren Apps verstecken inkl. Finder
+        // activationPolicy == .regular erfasst normale Apps
+        // activationPolicy == .accessory erfasst Finder und aehnliche
+        // Wir verstecken BEIDE Kategorien ausser AppSwitcher selbst
+        let myPID = ProcessInfo.processInfo.processIdentifier
         for running in NSWorkspace.shared.runningApplications {
-            guard running.activationPolicy == .regular,
-                  running.processIdentifier != ProcessInfo.processInfo.processIdentifier else { continue }
+            guard running.processIdentifier != myPID else { continue }
+            guard running.activationPolicy == .regular
+               || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
         windowsCleared = true
