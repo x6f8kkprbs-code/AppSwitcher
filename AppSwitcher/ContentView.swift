@@ -38,7 +38,7 @@ struct ContentView: View {
     private var header: some View {
         HStack(spacing: 6) {
             // Titel
-            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.3")
+            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.4")
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85))
                 .animation(.easeInOut(duration: 0.2), value: viewModel.isEditMode)
