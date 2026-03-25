@@ -150,7 +150,7 @@ class AppListViewModel: ObservableObject {
                || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3) {
             NSAppleScript(source: "tell application \"Finder\" to close every window")?.executeAndReturnError(nil)
         }
 
