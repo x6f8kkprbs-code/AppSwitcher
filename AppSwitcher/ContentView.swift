@@ -36,29 +36,51 @@ struct ContentView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
-            // Platz für den linken oberen Pfeil-Button
-            Spacer()
-                .frame(width: 30)
-            
-            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.2")
+        HStack(spacing: 6) {
+            // Titel
+            Text(viewModel.isEditMode ? "Edit" : "AppSwitcher 1.3")
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.85))
                 .animation(.easeInOut(duration: 0.2), value: viewModel.isEditMode)
-            
+
             Spacer()
-            
+
             if !viewModel.isEditMode {
-                Button(action: { 
-                    Task { await viewModel.loadApps() }
-                }) {
+                // Refresh
+                Button(action: { Task { await viewModel.loadApps() } }) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.white.opacity(0.3))
                 }
                 .buttonStyle(.plain)
+
+                // XOR/Latch Toggle
+                // XOR: nur gewaehlte App sichtbar, alle anderen versteckt
+                // Latch: normal, alle Fenster bleiben offen
+                Button(action: {
+                    withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+                        viewModel.windowMode = viewModel.windowMode == .xor ? .latch : .xor
+                    }
+                }) {
+                    Text(viewModel.windowMode == .xor ? "XOR" : "Latch")
+                        .font(.system(size: 9, weight: .semibold, design: .rounded))
+                        .foregroundStyle(viewModel.windowMode == .xor ? Color.orange : Color.white.opacity(0.5))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(viewModel.windowMode == .xor ? Color.orange.opacity(0.2) : Color.white.opacity(0.07)))
+                }
+                .buttonStyle(.plain)
+
+                // Clear: alle Fenster verstecken
+                Button(action: { viewModel.clearAllWindows() }) {
+                    Image(systemName: "rectangle.stack.badge.minus")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+                .buttonStyle(.plain)
             }
-            
+
+            // Edit-Button
             Button(action: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                     viewModel.isEditMode.toggle()
@@ -72,12 +94,8 @@ struct ContentView: View {
                     .background(Capsule().fill(viewModel.isEditMode ? Color.white.opacity(0.18) : Color.white.opacity(0.07)))
             }
             .buttonStyle(.plain)
-            
-            // Platz für den rechten oberen Pfeil-Button
-            Spacer()
-                .frame(width: 30)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 12)
         .padding(.vertical, 9)
     }
 
@@ -126,7 +144,8 @@ struct ContentView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
+            // XOR/Latch Toggle
             Button(action: {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
                     viewModel.windowMode = viewModel.windowMode == .xor ? .latch : .xor
@@ -140,22 +159,28 @@ struct ContentView: View {
                     .background(Capsule().fill(viewModel.windowMode == .xor ? Color.orange.opacity(0.2) : Color.white.opacity(0.07)))
             }
             .buttonStyle(.plain)
-            Spacer()
-            Text(viewModel.isEditMode ? "\(viewModel.pinnedBundleIDs.count) selected" : "\(viewModel.visibleApps.count) apps")
-                .font(.system(size: 9, design: .rounded))
-                .foregroundStyle(.white.opacity(0.5))
-            Spacer()
+            // Clear-Button
             Button(action: { viewModel.clearAllWindows() }) {
                 Image(systemName: "rectangle.stack.badge.minus")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.45))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.white.opacity(0.07)))
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.4))
             }
             .buttonStyle(.plain)
+            Spacer()
+            // App-Zaehler
+            Text(viewModel.isEditMode ? "\(viewModel.pinnedBundleIDs.count) selected" : "\(viewModel.visibleApps.count) apps")
+                .font(.system(size: 9, design: .rounded))
+                .foregroundStyle(.white.opacity(0.4))
+            Spacer()
+            // Hotkey-Hinweis
+            Text("Ctrl+F1")
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(.white.opacity(0.35))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.06)))
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 12)
         .padding(.vertical, 7)
     }
     
