@@ -150,7 +150,14 @@ class AppListViewModel: ObservableObject {
                || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3) {
+        // Zweiter hide()-Pass mit Delay fuer hartnackige Fenster auf zweitem Screen
+        let apps = NSWorkspace.shared.runningApplications
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            for running in apps {
+                guard running.processIdentifier != myPID else { continue }
+                guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
+                running.hide()
+            }
             NSAppleScript(source: "tell application \"Finder\" to close every window")?.executeAndReturnError(nil)
         }
 
