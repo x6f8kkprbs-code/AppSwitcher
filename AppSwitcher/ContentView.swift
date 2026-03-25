@@ -71,7 +71,7 @@ struct ContentView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, 12).padding(.trailing, 28)  // rechts mehr Platz wegen Pfeil-Button
         .padding(.vertical, 9)
     }
 
