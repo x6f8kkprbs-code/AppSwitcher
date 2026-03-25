@@ -54,30 +54,6 @@ struct ContentView: View {
                 }
                 .buttonStyle(.plain)
 
-                // XOR/Latch Toggle
-                // XOR: nur gewaehlte App sichtbar, alle anderen versteckt
-                // Latch: normal, alle Fenster bleiben offen
-                Button(action: {
-                    withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
-                        viewModel.windowMode = viewModel.windowMode == .xor ? .latch : .xor
-                    }
-                }) {
-                    Text(viewModel.windowMode == .xor ? "XOR" : "Latch")
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
-                        .foregroundStyle(viewModel.windowMode == .xor ? Color.orange : Color.white.opacity(0.5))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(viewModel.windowMode == .xor ? Color.orange.opacity(0.2) : Color.white.opacity(0.07)))
-                }
-                .buttonStyle(.plain)
-
-                // Clear: alle Fenster verstecken
-                Button(action: { viewModel.clearAllWindows() }) {
-                    Image(systemName: "rectangle.stack.badge.minus")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.4))
-                }
-                .buttonStyle(.plain)
             }
 
             // Edit-Button
