@@ -140,6 +140,7 @@ class AppListViewModel: ObservableObject {
 
     func clearAllWindows() {
         let myPID = ProcessInfo.processInfo.processIdentifier
+        // Schritt 1: Alle Apps per NSRunningApplication.hide()
         for running in NSWorkspace.shared.runningApplications {
             guard running.processIdentifier != myPID else { continue }
             guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
@@ -149,6 +150,9 @@ class AppListViewModel: ObservableObject {
         let closeFinder = "tell application \"Finder\" to close every window"
         let hideClaude = "tell application \"System Events\" to set visible of process \"Claude\" to false"
         DispatchQueue.global(qos: .userInitiated).async {
+            // Cold-Start Fix: Claude sofort als erstes verstecken
+            // beim ersten Clear ist Claude noch nicht im hide-Zustand registriert
+            NSAppleScript(source: hideClaude)?.executeAndReturnError(nil)
             NSAppleScript(source: hideAll)?.executeAndReturnError(nil)
             NSAppleScript(source: closeFinder)?.executeAndReturnError(nil)
             Thread.sleep(forTimeInterval: 0.3)
