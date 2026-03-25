@@ -145,9 +145,12 @@ class AppListViewModel: ObservableObject {
             guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
-        let script = "tell application \"System Events\" to set visible of every process whose background only is false and name is not \"AppSwitcher\" to false"
+        let hideAll = "tell application \"System Events\" to set visible of every process whose background only is false and name is not \"AppSwitcher\" to false"
+        let hideFinder = "tell application \"System Events\" to set visible of process \"Finder\" to false"
         DispatchQueue.global(qos: .userInitiated).async {
-            NSAppleScript(source: script)?.executeAndReturnError(nil)
+            NSAppleScript(source: hideAll)?.executeAndReturnError(nil)
+            Thread.sleep(forTimeInterval: 0.5)
+            NSAppleScript(source: hideFinder)?.executeAndReturnError(nil)
         }
         windowsCleared = true
     }
