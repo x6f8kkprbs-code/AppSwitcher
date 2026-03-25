@@ -14,6 +14,13 @@ struct RunningApp: Identifiable, Equatable {
 class AppListViewModel: ObservableObject {
     @Published var allApps: [RunningApp] = []
     @Published var isEditMode: Bool = false
+    // Fenster-Modus: latch = normal, xor = nur gewaehlte App sichtbar
+    @Published var windowMode: WindowMode = .latch
+
+    enum WindowMode {
+        case latch  // Alle Fenster bleiben offen, gewaehlte App kommt nach vorne
+        case xor    // Nur gewaehlte App bleibt sichtbar, alle anderen werden versteckt
+    }
     @Published var pinnedBundleIDs: Set<String> = []
     private var refreshTimer: Timer?
 
@@ -98,9 +105,7 @@ class AppListViewModel: ObservableObject {
         // Schritt 1: App unhiden falls per Cmd+H versteckt
         if nsApp.isHidden { nsApp.unhide() }
 
-        // Schritt 2: Alle Fenster via AX aufklappen
-        // kCFBooleanFalse (nicht false as CFTypeRef!) ist der korrekte Typ
-        // den die Accessibility API akzeptiert um Fenster zu unminimieren
+        // Schritt 2: Minimierte Fenster aufklappen via AX
         let appElement = AXUIElementCreateApplication(app.id)
         var windowList: CFTypeRef?
         if AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowList) == .success,
@@ -114,8 +119,28 @@ class AppListViewModel: ObservableObject {
             }
         }
 
-        // Schritt 3: App sofort aktivieren
+        // Schritt 3: XOR-Modus - alle anderen Apps verstecken
+        // Nur die gewaehlte App bleibt sichtbar auf dem Desktop
+        if windowMode == .xor {
+            for running in NSWorkspace.shared.runningApplications {
+                guard running.activationPolicy == .regular,
+                      running.processIdentifier != app.id,
+                      running.processIdentifier != ProcessInfo.processInfo.processIdentifier else { continue }
+                running.hide()
+            }
+        }
+
+        // Schritt 4: App in den Vordergrund bringen
         nsApp.activate(options: [.activateAllWindows])
+    }
+
+    // Clear: alle laufenden Apps verstecken -> leerer Desktop
+    func clearAllWindows() {
+        for running in NSWorkspace.shared.runningApplications {
+            guard running.activationPolicy == .regular,
+                  running.processIdentifier != ProcessInfo.processInfo.processIdentifier else { continue }
+            running.hide()
+        }
     }
 
     func togglePin(_ app: RunningApp) {

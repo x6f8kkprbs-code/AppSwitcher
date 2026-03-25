@@ -126,29 +126,34 @@ struct ContentView: View {
     }
 
     private var footer: some View {
-        HStack {
-            // Platz für den linken unteren Pfeil-Button
+        HStack(spacing: 6) {
+            Button(action: {
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+                    viewModel.windowMode = viewModel.windowMode == .xor ? .latch : .xor
+                }
+            }) {
+                Text(viewModel.windowMode == .xor ? "XOR" : "Latch")
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(viewModel.windowMode == .xor ? Color.orange : Color.white.opacity(0.5))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(viewModel.windowMode == .xor ? Color.orange.opacity(0.2) : Color.white.opacity(0.07)))
+            }
+            .buttonStyle(.plain)
             Spacer()
-                .frame(width: 30)
-            
-            Text(viewModel.isEditMode
-                 ? "\(viewModel.pinnedBundleIDs.count) selected"
-                 : "\(viewModel.visibleApps.count) apps")
+            Text(viewModel.isEditMode ? "\(viewModel.pinnedBundleIDs.count) selected" : "\(viewModel.visibleApps.count) apps")
                 .font(.system(size: 9, design: .rounded))
-                .foregroundStyle(.white.opacity(0.6))
-            
+                .foregroundStyle(.white.opacity(0.5))
             Spacer()
-            
-            Text("Ctrl+F1")
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(.white.opacity(0.55))
-                .padding(.horizontal, 5)
-                .padding(.vertical, 2)
-                .background(RoundedRectangle(cornerRadius: 3).fill(.white.opacity(0.06)))
-            
-            // Platz für den rechten unteren Pfeil-Button
-            Spacer()
-                .frame(width: 30)
+            Button(action: { viewModel.clearAllWindows() }) {
+                Image(systemName: "rectangle.stack.badge.minus")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Color.white.opacity(0.07)))
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
