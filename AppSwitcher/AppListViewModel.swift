@@ -150,15 +150,18 @@ class AppListViewModel: ObservableObject {
                || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
-        // Zweiter hide()-Pass mit Delay fuer hartnackige Fenster auf zweitem Screen
+        // Finder sofort per AppleScript schliessen (reagiert besser als hide)
+        NSAppleScript(source: "tell application \"Finder\" to close every window")?.executeAndReturnError(nil)
+        // Zweiter hide-Pass nach 0.5s - aber NUR fuer Apps die noch sichtbar sind
+        // Kein Delay-Wakeup von Claude durch fruehzeitigen Fokus-Wechsel
         let apps = NSWorkspace.shared.runningApplications
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             for running in apps {
                 guard running.processIdentifier != myPID else { continue }
+                guard !running.isHidden else { continue }  // nur sichtbare Apps
                 guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
                 running.hide()
             }
-            NSAppleScript(source: "tell application \"Finder\" to close every window")?.executeAndReturnError(nil)
         }
 
         windowsCleared = true
