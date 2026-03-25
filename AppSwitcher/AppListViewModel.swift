@@ -139,51 +139,16 @@ class AppListViewModel: ObservableObject {
     @Published var windowsCleared: Bool = false
 
     func clearAllWindows() {
-        // Alle regulaeren Apps verstecken inkl. Finder
-        // activationPolicy == .regular erfasst normale Apps
-        // activationPolicy == .accessory erfasst Finder und aehnliche
-        // Wir verstecken BEIDE Kategorien ausser AppSwitcher selbst
         let myPID = ProcessInfo.processInfo.processIdentifier
         for running in NSWorkspace.shared.runningApplications {
             guard running.processIdentifier != myPID else { continue }
-            guard running.activationPolicy == .regular
-               || running.activationPolicy == .accessory else { continue }
+            guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
-        // Alle Fenster aller Apps minimieren via AppleScript
-        // Funktioniert auf Single- und Multi-Screen gleichermassen
-        // AXMinimized = true schickt jedes Fenster ins Dock
-        let minimizeScript = """
-        tell application "System Events"
-            repeat with proc in every process whose background only is false
-                try
-                    repeat with win in every window of proc
-                        try
-                            set value of attribute "AXMinimized" of win to true
-                        end try
-                    end repeat
-                end try
-            end repeat
-        end tell
-        """
+        let script = "tell application \"System Events\" to set visible of every process whose background only is false and name is not \"AppSwitcher\" to false"
         DispatchQueue.global(qos: .userInitiated).async {
-            NSAppleScript(source: minimizeScript)?.executeAndReturnError(nil)
+            NSAppleScript(source: script)?.executeAndReturnError(nil)
         }
-
-        // Finder sofort per AppleScript schliessen (reagiert besser als hide)
-        NSAppleScript(source: "tell application \"Finder\" to close every window")?.executeAndReturnError(nil)
-        // Zweiter hide-Pass nach 0.5s - aber NUR fuer Apps die noch sichtbar sind
-        // Kein Delay-Wakeup von Claude durch fruehzeitigen Fokus-Wechsel
-        let apps = NSWorkspace.shared.runningApplications
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            for running in apps {
-                guard running.processIdentifier != myPID else { continue }
-                guard !running.isHidden else { continue }  // nur sichtbare Apps
-                guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
-                running.hide()
-            }
-        }
-
         windowsCleared = true
     }
 
