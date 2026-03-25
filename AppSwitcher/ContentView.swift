@@ -145,7 +145,7 @@ struct ContentView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            // XOR/Latch Toggle
+            // XOR/Latch Toggle - mit mehr Abstand vom Rand
             Button(action: {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
                     viewModel.windowMode = viewModel.windowMode == .xor ? .latch : .xor
@@ -159,20 +159,27 @@ struct ContentView: View {
                     .background(Capsule().fill(viewModel.windowMode == .xor ? Color.orange.opacity(0.2) : Color.white.opacity(0.07)))
             }
             .buttonStyle(.plain)
-            // Clear-Button
-            Button(action: { viewModel.clearAllWindows() }) {
-                Image(systemName: "rectangle.stack.badge.minus")
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.4))
+            // Clear / All Toggle
+            // Clear: alle Fenster verstecken
+            // All: alle versteckten Fenster wieder anzeigen
+            Button(action: {
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+                    viewModel.toggleClearAll()
+                }
+            }) {
+                Text(viewModel.windowsCleared ? "All" : "Clear")
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(viewModel.windowsCleared ? Color.blue : Color.white.opacity(0.5))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(viewModel.windowsCleared ? Color.blue.opacity(0.2) : Color.white.opacity(0.07)))
             }
             .buttonStyle(.plain)
             Spacer()
-            // App-Zaehler
             Text(viewModel.isEditMode ? "\(viewModel.pinnedBundleIDs.count) selected" : "\(viewModel.visibleApps.count) apps")
                 .font(.system(size: 9, design: .rounded))
                 .foregroundStyle(.white.opacity(0.4))
             Spacer()
-            // Hotkey-Hinweis
             Text("Ctrl+F1")
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(.white.opacity(0.35))

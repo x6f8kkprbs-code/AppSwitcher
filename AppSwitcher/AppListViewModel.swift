@@ -135,12 +135,36 @@ class AppListViewModel: ObservableObject {
     }
 
     // Clear: alle laufenden Apps verstecken -> leerer Desktop
+    // Fenster-Status Toggle: clear <-> all
+    @Published var windowsCleared: Bool = false
+
     func clearAllWindows() {
+        // Alle regulaeren Apps verstecken (auf allen Spaces/Screens)
+        // hide() ist systemweit - betrifft alle Spaces gleichzeitig
         for running in NSWorkspace.shared.runningApplications {
             guard running.activationPolicy == .regular,
                   running.processIdentifier != ProcessInfo.processInfo.processIdentifier else { continue }
             running.hide()
         }
+        windowsCleared = true
+    }
+
+    func showAllWindows() {
+        // Alle versteckten Apps wieder sichtbar machen (unhide)
+        // und ans aktivieren - auf allen Spaces gleichzeitig
+        for running in NSWorkspace.shared.runningApplications {
+            guard running.activationPolicy == .regular,
+                  running.processIdentifier != ProcessInfo.processInfo.processIdentifier else { continue }
+            if running.isHidden {
+                running.unhide()
+            }
+        }
+        windowsCleared = false
+    }
+
+    func toggleClearAll() {
+        if windowsCleared { showAllWindows() }
+        else { clearAllWindows() }
     }
 
     func togglePin(_ app: RunningApp) {
