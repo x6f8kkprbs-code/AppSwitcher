@@ -140,7 +140,6 @@ class AppListViewModel: ObservableObject {
 
     func clearAllWindows() {
         let myPID = ProcessInfo.processInfo.processIdentifier
-        // Schritt 1: Alle Apps sofort per NSRunningApplication.hide() verstecken
         for running in NSWorkspace.shared.runningApplications {
             guard running.processIdentifier != myPID else { continue }
             guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
@@ -155,6 +154,8 @@ class AppListViewModel: ObservableObject {
             Thread.sleep(forTimeInterval: 0.3)
             NSAppleScript(source: hideClaude)?.executeAndReturnError(nil)
             NSAppleScript(source: closeFinder)?.executeAndReturnError(nil)
+            Thread.sleep(forTimeInterval: 0.5)
+            NSAppleScript(source: hideClaude)?.executeAndReturnError(nil)
         }
         windowsCleared = true
     }
