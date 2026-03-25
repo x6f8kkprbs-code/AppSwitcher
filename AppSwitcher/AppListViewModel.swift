@@ -140,20 +140,20 @@ class AppListViewModel: ObservableObject {
 
     func clearAllWindows() {
         let myPID = ProcessInfo.processInfo.processIdentifier
-        // Schritt 1: Alle Apps sofort verstecken
+        // Schritt 1: Alle Apps sofort per NSRunningApplication.hide() verstecken
         for running in NSWorkspace.shared.runningApplications {
             guard running.processIdentifier != myPID else { continue }
             guard running.activationPolicy == .regular || running.activationPolicy == .accessory else { continue }
             running.hide()
         }
-        // Schritt 2: Alle anderen Apps via System Events verstecken
         let hideAll = "tell application \"System Events\" to set visible of every process whose background only is false and name is not \"AppSwitcher\" to false"
-        // Schritt 3: Finder-Fenster explizit schliessen (Finder laesst sich nicht dauerhaft verstecken)
         let closeFinder = "tell application \"Finder\" to close every window"
+        let hideClaude = "tell application \"System Events\" to set visible of process \"Claude\" to false"
         DispatchQueue.global(qos: .userInitiated).async {
             NSAppleScript(source: hideAll)?.executeAndReturnError(nil)
             NSAppleScript(source: closeFinder)?.executeAndReturnError(nil)
-            Thread.sleep(forTimeInterval: 0.5)
+            Thread.sleep(forTimeInterval: 0.3)
+            NSAppleScript(source: hideClaude)?.executeAndReturnError(nil)
             NSAppleScript(source: closeFinder)?.executeAndReturnError(nil)
         }
         windowsCleared = true
