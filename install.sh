@@ -12,7 +12,7 @@ echo 'Build OK'
 
 # App-Pfad
 APP=$(find ~/Library/Developer/Xcode/DerivedData/AppSwitcher-* \
-  -name 'AppSwitcher.app' -path '*/Debug/*' 2>/dev/null | head -1)
+  -name 'AppSwitcher.app' -path "*/Debug/*" -not -path "*/Index.noindex/*" 2>/dev/null | head -1)
 
 # LSUIElement entfernen
 /usr/libexec/PlistBuddy -c 'Delete :LSUIElement' "$APP/Contents/Info.plist" 2>/dev/null || true

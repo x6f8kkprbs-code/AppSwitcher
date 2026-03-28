@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             let alert = NSAlert()
             alert.messageText = "Bedienungshilfen fehlen"
-            alert.informativeText = "Systemeinstellungen > Datenschutz > Bedienungshilfen: AppSwitcher entfernen, neu hinzufuegen und Schalter aktivieren. Dann App neu starten."
+            alert.informativeText = "Systemeinstellungen > Datenschutz > Bedienungshilfen: FloatSwitch entfernen, neu hinzufuegen und Schalter aktivieren. Dann App neu starten."
             alert.alertStyle = .warning
             alert.addButton(withTitle: "Systemeinstellungen oeffnen")
             alert.addButton(withTitle: "Spaeter")
